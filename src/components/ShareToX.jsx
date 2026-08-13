@@ -77,7 +77,9 @@ import styles from "./ShareToX.module.css";
 
 export default function ShareToX({ resultBlob }) {
 
+  const [loading, setLoading] = useState(false);
   const [note, setNote] = useState("Press CTRL+V / ⌘+V to attach the photo to your post.");
+
 
   const handleShare = async () => {
     setLoading(true);
