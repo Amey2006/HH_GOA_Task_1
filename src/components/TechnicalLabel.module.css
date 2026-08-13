@@ -1,0 +1,11 @@
+.label {
+  font-family: var(--font-technical);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-500);
+}
+
+.dim {
+  color: var(--text-muted);
+}

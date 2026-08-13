@@ -1,0 +1,44 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 32px;
+  min-width: 44px;
+  background: var(--gold-500);
+  color: var(--text-inverse);
+  border: 2px solid var(--gold-500);
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: transform var(--ease-fast), background var(--ease-fast), opacity var(--ease-fast);
+}
+
+.button:hover:not(:disabled) {
+  background: var(--gold-400);
+  transform: translateY(-1px);
+}
+
+.button:disabled {
+  opacity: 0.55;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(7, 43, 27, 0.35);
+  border-top-color: var(--text-inverse);
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation: none; }
+}

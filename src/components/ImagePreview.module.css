@@ -1,0 +1,59 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.frame {
+  width: min(320px, 100%);
+  aspect-ratio: 780 / 620;
+  clip-path: url(#hh-arch-clip);
+  background: var(--surface-dark);
+  overflow: hidden;
+  box-shadow: var(--shadow-medium);
+  border: 3px solid var(--gold-500);
+}
+
+.photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--ease-fast);
+}
+
+.controls {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.controlRow {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.controlRow input[type="range"] {
+  accent-color: var(--gold-500);
+  width: 100%;
+}
+
+.changeButton {
+  align-self: center;
+  margin-top: 4px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  min-height: 44px;
+}
+
+.changeButton:hover {
+  color: var(--gold-400);
+}
