@@ -3,7 +3,7 @@ import { shareToX } from "../utils/shareToX.js";
 import styles from "./ShareToX.module.css";
 
 export default function ShareToX({ resultBlob }) {
-  const [note, setNote] = useState(null);
+  const [note, setNote] = useState("Press CTRL+V / ⌘+V to attach the photo to your post.");
 
   const handleShare = async () => {
     const { method } = await shareToX(resultBlob);
@@ -12,7 +12,7 @@ export default function ShareToX({ resultBlob }) {
     } else if (method === "intent") {
       setNote("X is open with your caption ready — attach the photo you downloaded.");
     } else if (method === "files") {
-      setNote(null);
+      setNote("Your frame is saved to files — attach it when you're ready to post.");
     }
   };
 
