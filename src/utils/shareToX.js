@@ -135,12 +135,12 @@ import { THEME } from "../config/theme.js";
 
 const CAPTION = `Just got framed for ${THEME.brand.name} ${THEME.brand.year} 🌴✨ See you on the beach, builders. ${THEME.brand.hashtag}`;
 
-// Helper to safely convert blob to base64
+// Safely converts blob data into a pure base64 text string
 function blobToBase64(blob) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => {
-      // Split the data URL prefix "data:image/jpeg;base64," out
+      // Extract ONLY the text string, removing "data:image/jpeg;base64," prefix
       const base64String = reader.result.split(',')[1];
       resolve(base64String);
     };
@@ -151,29 +151,35 @@ function blobToBase64(blob) {
 
 async function uploadToFreeImageHost(blob) {
   try {
-    const base64Data = await blobToBase64(blob);
+    const base64Text = await blobToBase64(blob);
 
-    const formData = new FormData();
-    formData.append("source", base64Data);
-    formData.append("action", "upload");
-    formData.append("format", "json");
+    // Use URLSearchParams instead of FormData to prevent browser CORS/fetch locks
+    const payload = new URLSearchParams();
+    payload.append("key", "6d207e02198a847aa98d0a2a901485a5");
+    payload.append("action", "upload");
+    payload.append("source", base64Text);
+    payload.append("format", "json");
 
     const res = await fetch("https://freeimage.host", {
       method: "POST",
-      body: formData,
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: payload.toString()
     });
 
-    if (!res.ok) throw new Error(`HTTP status error: ${res.status}`);
+    if (!res.ok) throw new Error(`HTTP network error: ${res.status}`);
 
     const data = await res.json();
     
-    if (Number(data.status_code) !== 200 || !data.image || !data.image.url) {
-      throw new Error("FreeImage API failed to process upload payload");
+    // Explicitly validate API response parameters
+    if (!data || data.status_code !== 200 || !data.image || !data.image.url) {
+      throw new Error("API refused text payload structure");
     }
     
     return data.image.url;
   } catch (err) {
-    console.error("Upload stream error:", err);
+    console.error("Direct upload stream caught an error:", err);
     throw err;
   }
 }
@@ -188,16 +194,15 @@ export async function shareToX(blob) {
   if (blob) {
     try {
       const imageUrl = await uploadToFreeImageHost(blob);
-      // FIXED TEMPLATE LITERAL STRINGS HERE:
       const xIntentUrl = `https://twitter.com{encodeURIComponent(CAPTION)}&url=${encodeURIComponent(imageUrl)}`;
       window.open(xIntentUrl, "_blank", "width=600,height=450,noopener,noreferrer");
       return { method: "freeimage" };
     } catch (error) {
-      console.error("FreeImage upload failed, falling back:", error);
+      console.error("FreeImage upload pipeline failed, executing fallback:", error);
     }
   }
 
-  // FIXED FALLBACK STRING HERE:
+  // Pure, clean URL fallback string ensuring no inline CSP execution bugs 
   const intentUrl = `https://twitter.com{encodeURIComponent(CAPTION)}`;
   window.open(intentUrl, "_blank", "width=600,height=450,noopener,noreferrer");
   return { method: "intent" };
