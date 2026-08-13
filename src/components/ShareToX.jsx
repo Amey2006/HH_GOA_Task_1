@@ -76,8 +76,8 @@ import { shareToX } from "../utils/shareToX.js";
 import styles from "./ShareToX.module.css";
 
 export default function ShareToX({ resultBlob }) {
-  const [note, setNote] = useState(null);
-  const [loading, setLoading] = useState(false);
+
+  const [note, setNote] = useState("Press CTRL+V / ⌘+V to attach the photo to your post.");
 
   const handleShare = async () => {
     setLoading(true);
@@ -89,6 +89,9 @@ export default function ShareToX({ resultBlob }) {
       setNote("Your frame was uploaded so it shows up in the post — X is open, just hit Post.");
     } else if (method === "intent") {
       setNote("X is open with your caption ready — attach the photo you downloaded.");
+
+    } else if (method === "files") {
+      setNote("Your frame is saved to files — attach it when you're ready to post.");
     }
     setLoading(false);
   };
