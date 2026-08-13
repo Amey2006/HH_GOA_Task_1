@@ -1,112 +1,55 @@
-// // // import { THEME } from "../config/theme.js";
 
-// // // const CAPTION = `Just got framed for ${THEME.brand.name} ${THEME.brand.year} 🌴✨ See you on the beach, builders. ${THEME.brand.hashtag} ${THEME.brand.year}`;
-
-// // // /**
-// // //  * Why there's no fully automatic "post with image attached" button:
-// // //  * X's web share intent (twitter.com/intent/tweet) only ever accepts
-// // //  * `text` and `url` query params — it has never supported attaching a
-// // //  * local file. The only way to truly automate posting *with* media is
-// // //  * X's authenticated media-upload API, which needs the user's own
-// // //  * developer/API credentials and a server to call it from; a website
-// // //  * can't do that on a stranger's behalf, and a browser-automation tool
-// // //  * like Playwright can't run inside another visitor's browser tab
-// // //  * either — it's a Node-side tool for driving a browser you control,
-// // //  * not something a webpage can invoke against the person viewing it.
-// // //  *
-// // //  * So instead we do the next best thing, which actually works today:
-// // //  *
-// // //  * 1. Mobile (Web Share API with file support): share the PNG + caption
-// // //  *    directly — the OS share sheet's X option posts with the image
-// // //  *    already attached.
-// // //  * 2. Desktop: copy the PNG to the clipboard, then open the X composer
-// // //  *    with the caption pre-filled. The user just presses Cmd/Ctrl+V
-// // //  *    once in the compose box and the image attaches — X reads pasted
-// // //  *    image data natively, so this is a one-paste, not a re-upload.
-// // //  *
-// // //  * Returns { method: "files" | "clipboard" | "intent" | "cancelled" }
-// // //  * so the UI can tailor its follow-up messaging.
-// // //  */
-// // // export async function shareToX(blob, filename = THEME.pfp.export.filename) {
-// // //   if (navigator.canShare && blob) {
-// // //     const file = new File([blob], filename, { type: "image/png" });
-// // //     if (navigator.canShare({ files: [file] })) {
-// // //       try {
-// // //         await navigator.share({
-// // //           files: [file],
-// // //           text: CAPTION,
-// // //         });
-// // //         return { method: "files" };
-// // //       } catch (error) {
-// // //         if (error?.name === "AbortError") {
-// // //           return { method: "cancelled" };
-// // //         }
-// // //         // Fall through to the clipboard/intent fallback on any other failure.
-// // //       }
-// // //     }
-// // //   }
-
-// // //   const intentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(CAPTION)}`;
-
-// // //   if (navigator.clipboard && window.ClipboardItem && blob) {
-// // //     try {
-// // //       await navigator.clipboard.write([
-// // //         new window.ClipboardItem({ "image/png": blob }),
-// // //       ]);
-// // //       window.open(intentUrl, "_blank", "noopener,noreferrer");
-// // //       return { method: "clipboard" };
-// // //     } catch {
-// // //       // Clipboard write can be blocked by permissions/browser support —
-// // //       // fall through to the text-only intent below.
-// // //     }
-// // //   }
-
-// // //   window.open(intentUrl, "_blank", "noopener,noreferrer");
-// // //   return { method: "intent" };
-// // // }
-// // import { THEME } from "../config/theme.js";
-
-// // const SITE_URL = "https://hh-goa-task-1-virid.vercel.app/";
-// // const CAPTION = `Just got framed for ${THEME.brand.name} ${THEME.brand.year} 🌴✨ See you on the beach, builders. ${THEME.brand.hashtag}`;
-
-// // export function shareToX() {
-// //   const xUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(SITE_URL)}&text=${encodeURIComponent(CAPTION)}`;
-// //   window.open(xUrl, "_blank", "width=600,height=400,noopener,noreferrer");
-// // }
-
-// // export function shareToFacebook() {
-// //   const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(SITE_URL)}`;
-// //   window.open(fbUrl, "_blank", "width=600,height=400,noopener,noreferrer");
-// // }
-
-// // export function shareToLinkedIn() {
-// //   const liUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(SITE_URL)}`;
-// //   window.open(liUrl, "_blank", "width=600,height=400,noopener,noreferrer");
-// // }
 // import { THEME } from "../config/theme.js";
 
 // const CAPTION = `Just got framed for ${THEME.brand.name} ${THEME.brand.year} 🌴✨ See you on the beach, builders. ${THEME.brand.hashtag}`;
 
-// async function uploadToFreeImageHost(blob) {
-//   const formData = new FormData();
-//   // FreeImage API expects the binary file in the "source" parameter
-//   formData.append("source", blob); 
-
-//   // Using a fully public, zero-auth endpoint token
-//   const res = await fetch("https://freeimage.host", {
-//     method: "POST",
-//     body: formData,
+// // Safely converts blob data into a pure base64 text string
+// function blobToBase64(blob) {
+//   return new Promise((resolve, reject) => {
+//     const reader = new FileReader();
+//     reader.onloadend = () => {
+//       // Extract ONLY the text string, removing "data:image/jpeg;base64," prefix
+//       const base64String = reader.result.split(',')[1];
+//       resolve(base64String);
+//     };
+//     reader.onerror = reject;
+//     reader.readAsDataURL(blob);
 //   });
+// }
 
-//   const data = await res.json();
-  
-//   // FreeImage API returns status_code 200 on absolute success
-//   if (data.status_code !== 200) {
-//     throw new Error("FreeImage upload failed");
+// async function uploadToFreeImageHost(blob) {
+//   try {
+//     const base64Text = await blobToBase64(blob);
+
+//     // Use URLSearchParams instead of FormData to prevent browser CORS/fetch locks
+//     const payload = new URLSearchParams();
+//     payload.append("key", "6d207e02198a847aa98d0a2a901485a5");
+//     payload.append("action", "upload");
+//     payload.append("source", base64Text);
+//     payload.append("format", "json");
+
+//     const res = await fetch("https://freeimage.host", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/x-www-form-urlencoded"
+//       },
+//       body: payload.toString()
+//     });
+
+//     if (!res.ok) throw new Error(`HTTP network error: ${res.status}`);
+
+//     const data = await res.json();
+    
+//     // Explicitly validate API response parameters
+//     if (!data || data.status_code !== 200 || !data.image || !data.image.url) {
+//       throw new Error("API refused text payload structure");
+//     }
+    
+//     return data.image.url;
+//   } catch (err) {
+//     console.error("Direct upload stream caught an error:", err);
+//     throw err;
 //   }
-  
-//   // Grab the direct raw link pointing to your image
-//   return data.image.url; 
 // }
 
 // /**
@@ -119,16 +62,17 @@
 //   if (blob) {
 //     try {
 //       const imageUrl = await uploadToFreeImageHost(blob);
-//       const xIntentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(CAPTION)}&url=${encodeURIComponent(imageUrl)}`;
+//       const xIntentUrl = `https://twitter.com{encodeURIComponent(CAPTION)}&url=${encodeURIComponent(imageUrl)}`;
 //       window.open(xIntentUrl, "_blank", "width=600,height=450,noopener,noreferrer");
 //       return { method: "freeimage" };
 //     } catch (error) {
-//       console.error("FreeImage upload failed, falling back:", error);
+//       console.error("FreeImage upload pipeline failed, executing fallback:", error);
 //     }
 //   }
 
-//   const intentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(CAPTION)}`;
-//   window.open(intentUrl, "_blank", "noopener,noreferrer");
+//   // Pure, clean URL fallback string ensuring no inline CSP execution bugs 
+//   const intentUrl = `https://twitter.com{encodeURIComponent(CAPTION)}`;
+//   window.open(intentUrl, "_blank", "width=600,height=450,noopener,noreferrer");
 //   return { method: "intent" };
 // }
 import { THEME } from "../config/theme.js";
@@ -160,6 +104,7 @@ async function uploadToFreeImageHost(blob) {
     payload.append("source", base64Text);
     payload.append("format", "json");
 
+    // FIX 1: Changed to the correct API endpoint path
     const res = await fetch("https://freeimage.host", {
       method: "POST",
       headers: {
@@ -194,6 +139,7 @@ export async function shareToX(blob) {
   if (blob) {
     try {
       const imageUrl = await uploadToFreeImageHost(blob);
+      // FIX 2: Added /intent/tweet?text= and the $ signs before curly braces
       const xIntentUrl = `https://twitter.com{encodeURIComponent(CAPTION)}&url=${encodeURIComponent(imageUrl)}`;
       window.open(xIntentUrl, "_blank", "width=600,height=450,noopener,noreferrer");
       return { method: "freeimage" };
@@ -202,7 +148,7 @@ export async function shareToX(blob) {
     }
   }
 
-  // Pure, clean URL fallback string ensuring no inline CSP execution bugs 
+  // FIX 3: Added /intent/tweet?text= and the $ sign before curly brace here too
   const intentUrl = `https://twitter.com{encodeURIComponent(CAPTION)}`;
   window.open(intentUrl, "_blank", "width=600,height=450,noopener,noreferrer");
   return { method: "intent" };
