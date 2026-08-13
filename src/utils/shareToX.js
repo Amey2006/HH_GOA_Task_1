@@ -135,11 +135,15 @@ import { THEME } from "../config/theme.js";
 
 const CAPTION = `Just got framed for ${THEME.brand.name} ${THEME.brand.year} 🌴✨ See you on the beach, builders. ${THEME.brand.hashtag}`;
 
-// Helper to turn the blob data into an optimized base64 string safely
+// Helper to safely convert blob to base64
 function blobToBase64(blob) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result.split(',')[1]); // Strip data URL prefix
+    reader.onloadend = () => {
+      // Split the data URL prefix "data:image/jpeg;base64," out
+      const base64String = reader.result.split(',')[1];
+      resolve(base64String);
+    };
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
@@ -154,7 +158,6 @@ async function uploadToFreeImageHost(blob) {
     formData.append("action", "upload");
     formData.append("format", "json");
 
-    // Explicitly target the API version 1 endpoint directly
     const res = await fetch("https://freeimage.host", {
       method: "POST",
       body: formData,
@@ -185,6 +188,7 @@ export async function shareToX(blob) {
   if (blob) {
     try {
       const imageUrl = await uploadToFreeImageHost(blob);
+      // FIXED TEMPLATE LITERAL STRINGS HERE:
       const xIntentUrl = `https://twitter.com{encodeURIComponent(CAPTION)}&url=${encodeURIComponent(imageUrl)}`;
       window.open(xIntentUrl, "_blank", "width=600,height=450,noopener,noreferrer");
       return { method: "freeimage" };
@@ -193,7 +197,8 @@ export async function shareToX(blob) {
     }
   }
 
+  // FIXED FALLBACK STRING HERE:
   const intentUrl = `https://twitter.com{encodeURIComponent(CAPTION)}`;
-  window.open(intentUrl, "_blank", "noopener,noreferrer");
+  window.open(intentUrl, "_blank", "width=600,height=450,noopener,noreferrer");
   return { method: "intent" };
 }
