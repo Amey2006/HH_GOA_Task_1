@@ -77,14 +77,13 @@
 // }
 import { THEME } from "../config/theme.js";
 
-const CAPTION = `Just got framed for ${THEME.brand.name} ${THEME.brand.year} 🌴✨ See you on the beach, builders. ${THEME.brand.hashtag}`;
+const CAPTION = "Just got framed for " + THEME.brand.name + " " + THEME.brand.year + " 🌴✨ See you on the beach, builders. " + THEME.brand.hashtag;
 
 // Safely converts blob data into a pure base64 text string
 function blobToBase64(blob) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => {
-      // Extract ONLY the text string, removing "data:image/jpeg;base64," prefix
       const base64String = reader.result.split(',')[1];
       resolve(base64String);
     };
@@ -97,15 +96,13 @@ async function uploadToFreeImageHost(blob) {
   try {
     const base64Text = await blobToBase64(blob);
 
-    // Use URLSearchParams instead of FormData to prevent browser CORS/fetch locks
     const payload = new URLSearchParams();
     payload.append("key", "6d207e02198a847aa98d0a2a901485a5");
     payload.append("action", "upload");
     payload.append("source", base64Text);
     payload.append("format", "json");
 
-    // FIX 1: Changed to the correct API endpoint path
-    const res = await fetch("https://freeimage.host", {
+    const res = await fetch("https://freeimage.host/api/1/upload", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded"
@@ -113,11 +110,10 @@ async function uploadToFreeImageHost(blob) {
       body: payload.toString()
     });
 
-    if (!res.ok) throw new Error(`HTTP network error: ${res.status}`);
+    if (!res.ok) throw new Error("HTTP network error: " + res.status);
 
     const data = await res.json();
     
-    // Explicitly validate API response parameters
     if (!data || data.status_code !== 200 || !data.image || !data.image.url) {
       throw new Error("API refused text payload structure");
     }
@@ -130,17 +126,16 @@ async function uploadToFreeImageHost(blob) {
 }
 
 /**
- * Uploads the generated PFP to FreeImage (publicly, anonymously) and opens
- * X's composer with a direct link to it — X unfurls that as an image
- * card in the draft. Falls back to a text-only intent if upload fails.
- * Returns { method: "freeimage" | "intent" | "cancelled" }.
+ * Uploads the generated PFP to FreeImage and opens X composer.
  */
 export async function shareToX(blob) {
   if (blob) {
     try {
       const imageUrl = await uploadToFreeImageHost(blob);
-      // FIX 2: Added /intent/tweet?text= and the $ signs before curly braces
-      const xIntentUrl = `https://twitter.com{encodeURIComponent(CAPTION)}&url=${encodeURIComponent(imageUrl)}`;
+      
+      // Plain URL configuration to remove all template string syntax errors
+      const xIntentUrl = "https://twitter.com" + encodeURIComponent(CAPTION) + "&url=" + encodeURIComponent(imageUrl);
+      
       window.open(xIntentUrl, "_blank", "width=600,height=450,noopener,noreferrer");
       return { method: "freeimage" };
     } catch (error) {
@@ -148,8 +143,7 @@ export async function shareToX(blob) {
     }
   }
 
-  // FIX 3: Added /intent/tweet?text= and the $ sign before curly brace here too
-  const intentUrl = `https://twitter.com{encodeURIComponent(CAPTION)}`;
+  const intentUrl = "https://twitter.com" + encodeURIComponent(CAPTION);
   window.open(intentUrl, "_blank", "width=600,height=450,noopener,noreferrer");
   return { method: "intent" };
 }
