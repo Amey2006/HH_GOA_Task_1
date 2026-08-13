@@ -5,17 +5,19 @@ import styles from "./ShareToX.module.css";
 export default function ShareToX({ resultBlob }) {
   const [note, setNote] = useState(null);
 
-  const handleShare = async () => {
-    const { method } = await shareToX(resultBlob);
-    if (method === "clipboard") {
-      setNote("Your frame is copied and X is open — press ⌘V / Ctrl+V in the post box to attach it.");
-    } else if (method === "intent") {
-      setNote("X is open with your caption ready — attach the photo you downloaded.");
-    } else if (method === "files") {
-      setNote(null);
-    }
-  };
-
+  // const handleShare = async () => {
+  //   const { method } = await shareToX(resultBlob);
+  //   if (method === "clipboard") {
+  //     setNote("Your frame is copied and X is open — press ⌘V / Ctrl+V in the post box to attach it.");
+  //   } else if (method === "intent") {
+  //     setNote("X is open with your caption ready — attach the photo you downloaded.");
+  //   } else if (method === "files") {
+  //     setNote(null);
+  //   }
+  // };
+  const handleShare = () => {
+  shareToX();
+};
   return (
     <div className={styles.wrap}>
       <button type="button" className={styles.button} onClick={handleShare}>
